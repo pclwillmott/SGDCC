@@ -1,6 +1,190 @@
 import Testing
 @testable import SGDCC
 
+@Test func testServiceMode() async throws {
+  
+  var packet = SGDCCPacket.writeCVByteDirectMode(cvNumber: 0, value: 0)
+  
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.writeCVByteDirectMode(cvNumber: 2048, value: 0)
+  
+  #expect(packet == nil)
+  
+  for cvNumber : UInt16 in 1 ... 1024 {
+
+    for cvValue : UInt8 in 0 ... 255 {
+      
+      packet = SGDCCPacket.writeCVByteDirectMode(cvNumber: cvNumber, value: cvValue)
+      
+      #expect(packet != nil)
+      
+      #expect(packet?.cvNumber != nil)
+      
+      #expect(packet?.cvValue != nil)
+      
+      #expect(packet?.packetType == .directModeWriteByte)
+      
+      #expect(packet?.decoderMode == .serviceModeDirectMode)
+      
+      if let packet, let cv = packet.cvNumber, let value = packet.cvValue {
+        
+        #expect(cv == cvNumber)
+
+        #expect(value == cvValue)
+
+      }
+      
+    }
+    
+  }
+
+  packet = SGDCCPacket.verifyCVByteDirectMode(cvNumber: 0, value: 0)
+  
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.verifyCVByteDirectMode(cvNumber: 2048, value: 0)
+  
+  #expect(packet == nil)
+  
+  for cvNumber : UInt16 in 1 ... 1024 {
+
+    for cvValue : UInt8 in 0 ... 255 {
+      
+      packet = SGDCCPacket.verifyCVByteDirectMode(cvNumber: cvNumber, value: cvValue)
+      
+      #expect(packet != nil)
+      
+      #expect(packet?.cvNumber != nil)
+      
+      #expect(packet?.cvValue != nil)
+      
+      #expect(packet?.packetType == .directModeVerifyByte)
+      
+      #expect(packet?.decoderMode == .serviceModeDirectMode)
+      
+      if let packet, let cv = packet.cvNumber, let value = packet.cvValue {
+        
+        #expect(cv == cvNumber)
+
+        #expect(value == cvValue)
+
+      }
+      
+    }
+    
+  }
+
+  packet = SGDCCPacket.verifyCVBitDirectMode(cvNumber: 0, bit: 0, value: 0)
+  
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.verifyCVBitDirectMode(cvNumber: 2048, bit: 0, value: 0)
+
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.verifyCVBitDirectMode(cvNumber: 1, bit: 50, value: 0)
+
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.verifyCVBitDirectMode(cvNumber: 1, bit: 7, value: 10)
+
+  #expect(packet == nil)
+  
+  for cvNumber : UInt16 in 1 ... 1024 {
+
+    for cvBit : UInt8 in 0 ... 7 {
+      
+      for cvValue : UInt8 in 0 ... 1 {
+        
+        packet = SGDCCPacket.verifyCVBitDirectMode(cvNumber: cvNumber, bit: cvBit, value: cvValue)
+
+        #expect(packet != nil)
+        
+        #expect(packet?.cvNumber != nil)
+        
+        #expect(packet?.cvValue == nil)
+        
+        #expect(packet?.cvBitNumber != nil)
+        
+        #expect(packet?.cvBitValue != nil)
+        
+        #expect(packet?.packetType == .directModeVerifyBit)
+        
+        #expect(packet?.decoderMode == .serviceModeDirectMode)
+        
+        if let packet, let cv = packet.cvNumber, let value = packet.cvBitValue, let bit = packet.cvBitNumber {
+          
+          #expect(cv == cvNumber)
+          
+          #expect(value == cvValue)
+          
+          #expect(bit == cvBit)
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+
+  packet = SGDCCPacket.writeCVBitDirectMode(cvNumber: 0, bit: 0, value: 0)
+  
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.writeCVBitDirectMode(cvNumber: 2048, bit: 0, value: 0)
+
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.writeCVBitDirectMode(cvNumber: 1, bit: 50, value: 0)
+
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.writeCVBitDirectMode(cvNumber: 1, bit: 7, value: 10)
+
+  #expect(packet == nil)
+  
+  for cvNumber : UInt16 in 1 ... 1024 {
+
+    for cvBit : UInt8 in 0 ... 7 {
+      
+      for cvValue : UInt8 in 0 ... 1 {
+        
+        packet = SGDCCPacket.writeCVBitDirectMode(cvNumber: cvNumber, bit: cvBit, value: cvValue)
+
+        #expect(packet != nil)
+        
+        #expect(packet?.cvNumber != nil)
+        
+        #expect(packet?.cvValue == nil)
+        
+        #expect(packet?.cvBitNumber != nil)
+        
+        #expect(packet?.cvBitValue != nil)
+        
+        #expect(packet?.packetType == .directModeWriteBit)
+        
+        #expect(packet?.decoderMode == .serviceModeDirectMode)
+        
+       if let packet, let cv = packet.cvNumber, let value = packet.cvBitValue, let bit = packet.cvBitNumber {
+          
+          #expect(cv == cvNumber)
+          
+          #expect(value == cvValue)
+          
+          #expect(bit == cvBit)
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+
+}
+
 @Test func testTitles() async throws {
   
   for item in SGDCCPacketType.allCases {
@@ -15,19 +199,19 @@ import Testing
   
   var functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  var packet = SGDCCPacket(shortAddress: 0, f0toF4: functions)
+  var packet = SGDCCPacket.f0f4Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f0toF4: functions)
+  packet = SGDCCPacket.f0f4Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f0toF4: [])
+  packet = SGDCCPacket.f0f4Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f0toF4: functions)
+  packet = SGDCCPacket.f0f4Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -41,7 +225,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f0toF4: functions)
+      packet = SGDCCPacket.f0f4Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -49,7 +233,7 @@ import Testing
         
         #expect(packet.functions == functions)
         
-        #expect(packet.packetType == .functionFLF1F4)
+        #expect(packet.packetType == .functionF0F4)
         
         #expect(packet.isChecksumOK)
         
@@ -61,19 +245,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f5toF8: functions)
+  packet = SGDCCPacket.f5f8Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f5toF8: functions)
+  packet = SGDCCPacket.f5f8Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f5toF8: [])
+  packet = SGDCCPacket.f5f8Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f5toF8: functions)
+  packet = SGDCCPacket.f5f8Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -87,7 +271,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f5toF8: functions)
+      packet = SGDCCPacket.f5f8Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -107,19 +291,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f9toF12: functions)
+  packet = SGDCCPacket.f9f12Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f9toF12: functions)
+  packet = SGDCCPacket.f9f12Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f9toF12: [])
+  packet = SGDCCPacket.f9f12Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f9toF12: functions)
+  packet = SGDCCPacket.f9f12Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -133,7 +317,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f9toF12: functions)
+      packet = SGDCCPacket.f9f12Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -153,19 +337,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f13toF20: functions)
+  packet = SGDCCPacket.f13f20Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f13toF20: functions)
+  packet = SGDCCPacket.f13f20Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f13toF20: [])
+  packet = SGDCCPacket.f13f20Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f13toF20: functions)
+  packet = SGDCCPacket.f13f20Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -179,7 +363,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f13toF20: functions)
+      packet = SGDCCPacket.f13f20Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -199,19 +383,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f21toF28: functions)
+  packet = SGDCCPacket.f21f28Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f21toF28: functions)
+  packet = SGDCCPacket.f21f28Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f21toF28: [])
+  packet = SGDCCPacket.f21f28Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f21toF28: functions)
+  packet = SGDCCPacket.f21f28Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -225,7 +409,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f21toF28: functions)
+      packet = SGDCCPacket.f21f28Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -245,19 +429,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f29toF36: functions)
+  packet = SGDCCPacket.f29f36Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f29toF36: functions)
+  packet = SGDCCPacket.f29f36Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f29toF36: [])
+  packet = SGDCCPacket.f29f36Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f29toF36: functions)
+  packet = SGDCCPacket.f29f36Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -271,7 +455,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f29toF36: functions)
+      packet = SGDCCPacket.f29f36Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -291,19 +475,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f37toF44: functions)
+  packet = SGDCCPacket.f37f44Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f37toF44: functions)
+  packet = SGDCCPacket.f37f44Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f37toF44: [])
+  packet = SGDCCPacket.f37f44Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f37toF44: functions)
+  packet = SGDCCPacket.f37f44Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -317,7 +501,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f37toF44: functions)
+      packet = SGDCCPacket.f37f44Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -337,19 +521,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f45toF52: functions)
+  packet = SGDCCPacket.f45f52Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f45toF52: functions)
+  packet = SGDCCPacket.f45f52Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f45toF52: [])
+  packet = SGDCCPacket.f45f52Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f45toF52: functions)
+  packet = SGDCCPacket.f45f52Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -363,7 +547,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f45toF52: functions)
+      packet = SGDCCPacket.f45f52Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -383,19 +567,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f53toF60: functions)
+  packet = SGDCCPacket.f53f60Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f53toF60: functions)
+  packet = SGDCCPacket.f53f60Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f53toF60: [])
+  packet = SGDCCPacket.f53f60Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f53toF60: functions)
+  packet = SGDCCPacket.f53f60Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -409,7 +593,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f53toF60: functions)
+      packet = SGDCCPacket.f53f60Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -429,19 +613,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(shortAddress: 0, f61toF68: functions)
+  packet = SGDCCPacket.f61f68Control(shortAddress: 0, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, f61toF68: functions)
+  packet = SGDCCPacket.f61f68Control(shortAddress: 255, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f61toF68: [])
+  packet = SGDCCPacket.f61f68Control(shortAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, f61toF68: functions)
+  packet = SGDCCPacket.f61f68Control(shortAddress: 1, functions: functions)
   
   #expect(packet != nil)
   
@@ -455,7 +639,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(shortAddress: shortAddress, f61toF68: functions)
+      packet = SGDCCPacket.f61f68Control(shortAddress: shortAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -477,19 +661,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f0toF4: functions)
+  packet = SGDCCPacket.f0f4Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f0toF4: functions)
+  packet = SGDCCPacket.f0f4Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f0toF4: [])
+  packet = SGDCCPacket.f0f4Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f0toF4: functions)
+  packet = SGDCCPacket.f0f4Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -505,7 +689,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f0toF4: functions)
+      packet = SGDCCPacket.f0f4Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -513,7 +697,7 @@ import Testing
         
         #expect(packet.functions == functions)
         
-        #expect(packet.packetType == .functionFLF1F4)
+        #expect(packet.packetType == .functionF0F4)
         
         #expect(packet.isChecksumOK)
         
@@ -525,19 +709,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f5toF8: functions)
+  packet = SGDCCPacket.f5f8Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f5toF8: functions)
+  packet = SGDCCPacket.f5f8Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f5toF8: [])
+  packet = SGDCCPacket.f5f8Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f5toF8: functions)
+  packet = SGDCCPacket.f5f8Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -553,7 +737,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f5toF8: functions)
+      packet = SGDCCPacket.f5f8Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -573,19 +757,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f9toF12: functions)
+  packet = SGDCCPacket.f9f12Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f9toF12: functions)
+  packet = SGDCCPacket.f9f12Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f9toF12: [])
+  packet = SGDCCPacket.f9f12Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f9toF12: functions)
+  packet = SGDCCPacket.f9f12Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -601,7 +785,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f9toF12: functions)
+      packet = SGDCCPacket.f9f12Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -621,19 +805,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f13toF20: functions)
+  packet = SGDCCPacket.f13f20Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f13toF20: functions)
+  packet = SGDCCPacket.f13f20Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f13toF20: [])
+  packet = SGDCCPacket.f13f20Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f13toF20: functions)
+  packet = SGDCCPacket.f13f20Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -649,7 +833,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f13toF20: functions)
+      packet = SGDCCPacket.f13f20Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -669,19 +853,19 @@ import Testing
   
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f21toF28: functions)
+  packet = SGDCCPacket.f21f28Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f21toF28: functions)
+  packet = SGDCCPacket.f21f28Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f21toF28: [])
+  packet = SGDCCPacket.f21f28Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f21toF28: functions)
+  packet = SGDCCPacket.f21f28Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -697,7 +881,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f21toF28: functions)
+      packet = SGDCCPacket.f21f28Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -717,19 +901,19 @@ import Testing
 
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f29toF36: functions)
+  packet = SGDCCPacket.f29f36Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f29toF36: functions)
+  packet = SGDCCPacket.f29f36Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f29toF36: [])
+  packet = SGDCCPacket.f29f36Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f29toF36: functions)
+  packet = SGDCCPacket.f29f36Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -745,7 +929,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f29toF36: functions)
+      packet = SGDCCPacket.f29f36Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -765,19 +949,19 @@ import Testing
 
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f37toF44: functions)
+  packet = SGDCCPacket.f37f44Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f37toF44: functions)
+  packet = SGDCCPacket.f37f44Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f37toF44: [])
+  packet = SGDCCPacket.f37f44Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f37toF44: functions)
+  packet = SGDCCPacket.f37f44Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -793,7 +977,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f37toF44: functions)
+      packet = SGDCCPacket.f37f44Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -813,19 +997,19 @@ import Testing
 
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f45toF52: functions)
+  packet = SGDCCPacket.f45f52Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f45toF52: functions)
+  packet = SGDCCPacket.f45f52Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f45toF52: [])
+  packet = SGDCCPacket.f45f52Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f45toF52: functions)
+  packet = SGDCCPacket.f45f52Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -841,7 +1025,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f45toF52: functions)
+      packet = SGDCCPacket.f45f52Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -861,19 +1045,19 @@ import Testing
 
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f53toF60: functions)
+  packet = SGDCCPacket.f53f60Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f53toF60: functions)
+  packet = SGDCCPacket.f53f60Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f53toF60: [])
+  packet = SGDCCPacket.f53f60Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f53toF60: functions)
+  packet = SGDCCPacket.f53f60Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -889,7 +1073,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f53toF60: functions)
+      packet = SGDCCPacket.f53f60Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -909,19 +1093,19 @@ import Testing
 
   functions = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
   
-  packet = SGDCCPacket(longAddress: 0, f61toF68: functions)
+  packet = SGDCCPacket.f61f68Control(longAddress: 0, functions: functions)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, f61toF68: functions)
+  packet = SGDCCPacket.f61f68Control(longAddress: 10240, functions: functions)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 1, f61toF68: [])
+  packet = SGDCCPacket.f61f68Control(longAddress: 1, functions: [])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, f61toF68: functions)
+  packet = SGDCCPacket.f61f68Control(longAddress: 10239, functions: functions)
   
   #expect(packet != nil)
   
@@ -937,7 +1121,7 @@ import Testing
         functions[function] = UInt8.random(in: 0 ... 255) % 2 == 0
       }
       
-      packet = SGDCCPacket(longAddress: longAddress, f61toF68: functions)
+      packet = SGDCCPacket.f61f68Control(longAddress: longAddress, functions: functions)
       
       #expect(packet != nil)
       
@@ -979,7 +1163,7 @@ import Testing
 
 @Test func testSpeedAndDirection() async throws {
   
-  var packet : SGDCCPacket? = SGDCCPacket(longAddress: 0, speed28steps: 0, direction: .forward)
+  var packet : SGDCCPacket? = SGDCCPacket.speedAndDirection(longAddress: 0, speed28steps: 0, direction: .forward)
   
   #expect(packet != nil)
   
@@ -989,29 +1173,29 @@ import Testing
   
   #expect(packet?.direction == .forward)
   
-  packet = SGDCCPacket(longAddress: 10240, speed28steps: 0, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10240, speed28steps: 0, direction: .forward)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, speed28steps: 0, direction: .reverse)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10239, speed28steps: 0, direction: .reverse)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10239, speed28steps: 255, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10239, speed28steps: 255, direction: .forward)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, speed28steps: 32, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10239, speed28steps: 32, direction: .forward)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, speed28steps: 31, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10239, speed28steps: 31, direction: .forward)
   
   #expect(packet != nil)
   
   for longAddress : UInt16 in 0 ... 10239 {
     
-    packet = SGDCCPacket(longAddress: longAddress, speed28steps: 0, direction: .forward)
+    packet = SGDCCPacket.speedAndDirection(longAddress: longAddress, speed28steps: 0, direction: .forward)
     
     #expect(packet != nil)
     
@@ -1033,7 +1217,7 @@ import Testing
   
   for speed : UInt8 in 0 ... 31 {
     
-    packet = SGDCCPacket(longAddress: 0, speed28steps: speed, direction: .forward)
+    packet = SGDCCPacket.speedAndDirection(longAddress: 0, speed28steps: speed, direction: .forward)
     
     #expect(packet != nil)
     
@@ -1054,7 +1238,7 @@ import Testing
   
   for direction in SGDCCLocomotiveDirection.allCases {
     
-    packet = SGDCCPacket(longAddress: 0, speed28steps: 0, direction: direction)
+    packet = SGDCCPacket.speedAndDirection(longAddress: 0, speed28steps: 0, direction: direction)
     
     #expect(packet != nil)
     
@@ -1076,19 +1260,19 @@ import Testing
   
   // 14 Speed Steps, Long Address
   
-  packet = SGDCCPacket(longAddress: 0, speed14Steps: 0, direction: .forward, functions:[])
+  packet = SGDCCPacket.speedAndDirection(longAddress: 0, speed14Steps: 0, direction: .forward, functions:[])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10240, speed14Steps: 0, direction: .forward, functions:[true])
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10240, speed14Steps: 0, direction: .forward, functions:[true])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, speed14Steps: 255, direction: .forward, functions:[true])
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10239, speed14Steps: 255, direction: .forward, functions:[true])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 0, speed14Steps: 0, direction: .forward, functions:[true])
+  packet = SGDCCPacket.speedAndDirection(longAddress: 0, speed14Steps: 0, direction: .forward, functions:[true])
   
   #expect(packet != nil)
   
@@ -1114,7 +1298,7 @@ import Testing
       
       for speed : UInt8 in 0 ... 0xf {
         
-        packet = SGDCCPacket(longAddress: longAddress, speed14Steps: speed, direction: direction, functions:[true])
+        packet = SGDCCPacket.speedAndDirection(longAddress: longAddress, speed14Steps: speed, direction: direction, functions:[true])
         
         #expect(packet != nil)
         
@@ -1134,7 +1318,7 @@ import Testing
 
         }
         
-        packet = SGDCCPacket(longAddress: longAddress, speed14Steps: speed, direction: direction, functions:[false])
+        packet = SGDCCPacket.speedAndDirection(longAddress: longAddress, speed14Steps: speed, direction: direction, functions:[false])
         
         #expect(packet != nil)
         
@@ -1162,21 +1346,21 @@ import Testing
   
   // 126 Steps, Long Address
   
-  packet = SGDCCPacket(longAddress: 0, speed126Steps: 0, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 0, speed126Steps: 0, direction: .forward)
   
   #expect(packet != nil)
   
-  packet = SGDCCPacket(longAddress: 10240, speed126Steps: 0, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10240, speed126Steps: 0, direction: .forward)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(longAddress: 10239, speed126Steps: 255, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(longAddress: 10239, speed126Steps: 255, direction: .forward)
   
   #expect(packet == nil)
   
   for speed : UInt8 in 0 ... 127 {
     
-    packet = SGDCCPacket(longAddress: 0, speed126Steps: speed, direction: .forward)
+    packet = SGDCCPacket.speedAndDirection(longAddress: 0, speed126Steps: speed, direction: .forward)
     
     #expect(packet != nil)
     
@@ -1198,19 +1382,19 @@ import Testing
   
   // 28 Steps, Short Address
   
-  packet = SGDCCPacket(shortAddress: 0, speed28Steps: 0, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 0, speed28Steps: 0, direction: .forward)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, speed28Steps: 0, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 255, speed28Steps: 0, direction: .forward)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 0, speed28Steps: 255, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 0, speed28Steps: 255, direction: .forward)
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, speed28Steps: 31, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 1, speed28Steps: 31, direction: .forward)
   
   #expect(packet != nil)
   
@@ -1220,7 +1404,7 @@ import Testing
       
       for direction in SGDCCLocomotiveDirection.allCases {
         
-        packet = SGDCCPacket(shortAddress: shortAddress, speed28Steps: speed, direction: direction)
+        packet = SGDCCPacket.speedAndDirection(shortAddress: shortAddress, speed28Steps: speed, direction: direction)
         
         #expect(packet != nil)
         
@@ -1246,19 +1430,19 @@ import Testing
   
   // 14 Steps, Short Address
   
-  packet = SGDCCPacket(shortAddress: 0, speed14Steps: 0, direction: .forward, functions: [true])
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 0, speed14Steps: 0, direction: .forward, functions: [true])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 255, speed14Steps: 0, direction: .forward, functions: [true])
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 255, speed14Steps: 0, direction: .forward, functions: [true])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 1, speed14Steps: 255, direction: .forward, functions: [true])
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 1, speed14Steps: 255, direction: .forward, functions: [true])
   
   #expect(packet == nil)
   
-  packet = SGDCCPacket(shortAddress: 0, speed14Steps: 0, direction: .forward, functions: [])
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 0, speed14Steps: 0, direction: .forward, functions: [])
  
   #expect(packet == nil)
   
@@ -1268,7 +1452,7 @@ import Testing
       
       for direction in SGDCCLocomotiveDirection.allCases {
         
-        packet = SGDCCPacket(shortAddress: shortAddress, speed14Steps: speed, direction: direction, functions: [true])
+        packet = SGDCCPacket.speedAndDirection(shortAddress: shortAddress, speed14Steps: speed, direction: direction, functions: [true])
 
         #expect(packet != nil)
         
@@ -1292,19 +1476,19 @@ import Testing
     
   }
   
-  packet = SGDCCPacket(shortAddress: 0, speed126Steps: 0, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 0, speed126Steps: 0, direction: .forward)
 
   #expect(packet == nil)
 
-  packet = SGDCCPacket(shortAddress: 255, speed126Steps: 0, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 255, speed126Steps: 0, direction: .forward)
 
   #expect(packet == nil)
 
-  packet = SGDCCPacket(shortAddress: 1, speed126Steps: 255, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 1, speed126Steps: 255, direction: .forward)
 
   #expect(packet == nil)
 
-  packet = SGDCCPacket(shortAddress: 0, speed126Steps: 128, direction: .forward)
+  packet = SGDCCPacket.speedAndDirection(shortAddress: 0, speed126Steps: 128, direction: .forward)
 
   #expect(packet == nil)
 
@@ -1314,7 +1498,7 @@ import Testing
       
       for direction in SGDCCLocomotiveDirection.allCases {
         
-        packet = SGDCCPacket(shortAddress: shortAddress, speed126Steps: speed, direction: direction)
+        packet = SGDCCPacket.speedAndDirection(shortAddress: shortAddress, speed126Steps: speed, direction: direction)
 
         #expect(packet != nil)
         

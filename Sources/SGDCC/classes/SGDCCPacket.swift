@@ -28,6 +28,7 @@
 // Revision History:
 //
 //     22/09/2024  Paul Willmott - SGDCCPacket.swift created
+//     24/09/2024  Paul Willmott - Service Mode - Direct Mode packets added.
 // -----------------------------------------------------------------------------
 
 import Foundation
@@ -39,7 +40,7 @@ public class SGDCCPacket : NSObject {
   
   // MARK: Constructors & Destructors
   
-  private init?(data:[UInt8], decoderMode:SGDCCDecoderMode = .operationsMode) {
+  private init(data:[UInt8], decoderMode:SGDCCDecoderMode = .operationsMode) {
     
     self.packet = data
     
@@ -62,673 +63,6 @@ public class SGDCCPacket : NSObject {
     guard packet.count > 1 && isChecksumOK else {
       return nil
     }
-    
-  }
-  
-  // MARK: Functions
-  
-  // Function Group One Instruction
-  
-  init?(shortAddress:UInt8, f0toF4 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 4 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 1 ... 4 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b10000000 | (functions[0] ? 0b00010000 : 0) | temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  
-  init?(longAddress:UInt16, f0toF4 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 4 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 1 ... 4 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b10000000 | (functions[0] ? 0b00010000 : 0) | temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  // Function Group Two Instructions
-  
-  init?(shortAddress:UInt8, f5toF8 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 8 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 5 ... 8 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b10110000 | temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f5toF8 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 8 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 5 ... 8 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b10110000 | temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(shortAddress:UInt8, f9toF12 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 12 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 9 ... 12 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b10100000 | temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f9toF12 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 12 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 9 ... 12 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b10100000 | temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  
-  // F13 to F20 Function Control
-  
-  init?(shortAddress:UInt8, f13toF20 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 20 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 13 ... 20 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b11011110, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f13toF20 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 20 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 13 ... 20 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b11011110, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  // F21 to F28 Function Control
-  
-  init?(shortAddress:UInt8, f21toF28 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 28 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 21 ... 28 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b11011111, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f21toF28 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 28 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 21 ... 28 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b11011111, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  
-  // F29 to F36 Function Control
-  
-  init?(shortAddress:UInt8, f29toF36 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 36 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 29 ... 36 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b11011000, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f29toF36 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 36 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 29 ... 36 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b11011000, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  
-  // F37 to F44 Function Control
-  
-  init?(shortAddress:UInt8, f37toF44 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 44 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 37 ... 44 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b11011001, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f37toF44 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 44 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 37 ... 44 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b11011001, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  
-  // F45 to F52 Function Control
-  
-  init?(shortAddress:UInt8, f45toF52 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 52 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 45 ... 52 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b11011010, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f45toF52 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 52 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 45 ... 52 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b11011010, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  
-  // F53 to F60 Function Control
-  
-  init?(shortAddress:UInt8, f53toF60 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 60 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 53 ... 60 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b11011011, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f53toF60 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 60 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 53 ... 60 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b11011011, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  
-  // F61 to F68 Function Control
-  
-  init?(shortAddress:UInt8, f61toF68 functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && functions.count > 68 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 61 ... 68 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [shortAddress, 0b11011100, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-
-  init?(longAddress:UInt16, f61toF68 functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && functions.count > 68 else {
-      return nil
-    }
-    
-    var temp : UInt8 = 0
-    
-    var mask : UInt8 = 0b00000001
-    
-    for index in 61 ... 68 {
-      temp |= functions[index] ? mask : 0
-      mask <<= 1
-    }
-
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b11011100, temp]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    decoderMode = .operationsMode
-    
-    super.init()
-    
-  }
-  // MARK: Speed and Direction
-  
-  // Speed and Direction Packet - 14 Speed Steps + 2 stops, Short Address
-
-  init?(shortAddress:UInt8, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:[Bool]) {
-    
-    guard shortAddressPartition ~= shortAddress && speed < 0b00010000 && functions.count > 0 else {
-      return nil
-    }
-    
-    decoderMode = .operationsMode
-    
-    let command : UInt8 = 0b01000000 | (functions[0] ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
-    
-    packet = [shortAddress, command]
-    
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    super.init()
-    
-  }
-  
-  // Speed and Direction Packet - 28 Speed Steps + 4 stops, Short Address
-
-  init?(shortAddress:UInt8, speed28Steps speed:UInt8, direction:SGDCCLocomotiveDirection) {
-    
-    guard shortAddressPartition ~= shortAddress && speed < 0b00100000 else {
-      return nil
-    }
-    
-    self.decoderMode = .operationsMode
-    
-    let command : UInt8 = 0b01000000 | ((speed & 0b00000001) != 0 ? 0b00010000 : 0) | (speed >> 1) | (direction == .forward ? 0b00100000 : 0)
-    
-    packet = [shortAddress, command]
-    
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    super.init()
-    
-  }
-
-  // Speed and Direction Packet - 14 Speed Steps + 2 stops, Long Address
-
-  init?(longAddress:UInt16, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:[Bool]) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && speed < 0b00010000 && functions.count > 0 else {
-      return nil
-    }
-    
-    self.decoderMode = .operationsMode
-    
-    let command : UInt8 = 0b01000000 | (functions[0] ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
-    
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), command]
-    
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    super.init()
-    
-  }
-  
-  // Speed and Direction Packet - 28 Speed Steps + 4 stops, Long Address
-
-  init?(longAddress:UInt16, speed28steps speed:UInt8, direction:SGDCCLocomotiveDirection) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-
-    guard longAddressPartition ~= cv17 && speed < 0b00100000 else {
-      return nil
-    }
-    
-    self.decoderMode = .operationsMode
-    
-    let command : UInt8 = 0b01000000 | ((speed & 0b00000001) != 0 ? 0b00010000 : 0) | (speed >> 1) | (direction == .forward ? 0b00100000 : 0)
-    
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), command]
-    
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    super.init()
-    
-  }
-  
-  // Speed and Direction Packet - 126 Speed Steps + 2 stops, Short Address
-
-  init?(shortAddress:UInt8, speed126Steps speed:UInt8, direction:SGDCCLocomotiveDirection) {
-    
-    guard shortAddressPartition ~= shortAddress && speed < 128 else {
-      return nil
-    }
-    
-    self.decoderMode = .operationsMode
-    
-    let data : UInt8 = speed | (direction == .forward ? 0b10000000 : 0)
-    
-    packet = [shortAddress, 0b00111111, data]
-
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    super.init()
-    
-  }
-
-  // Speed and Direction Packet - 126 Speed Steps + 2 stops, Long Address
-
-  init?(longAddress:UInt16, speed126Steps speed:UInt8, direction:SGDCCLocomotiveDirection) {
-    
-    let cv17 = SGDCCPacket.cv17(address: longAddress)
-    
-    guard longAddressPartition ~= cv17 && speed < 128 else {
-      return nil
-    }
-    
-    self.decoderMode = .operationsMode
-    
-    let data : UInt8 = speed | (direction == .forward ? 0b10000000 : 0)
-    
-    packet = [cv17, SGDCCPacket.cv18(address: longAddress), 0b00111111, data]
-    
-    packet.append(SGDCCPacket.checksum(packet))
-    
-    super.init()
     
   }
   
@@ -798,81 +132,43 @@ public class SGDCCPacket : NSObject {
   }
 
   public var functions : [Bool]? {
+    
     var result = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
+
+    let byte = packet[packet.count - 2]
+
+    func bits(_ range: ClosedRange<Int>) {
+      var mask : UInt8 = 0b00000001
+      for index in range {
+        result[index] = (byte & mask) != 0
+        mask <<= 1
+      }
+    }
+
     switch packetType {
-    case .functionFLF1F4:
-      let byte = packet[packet.count - 2]
+    case .functionF0F4:
       result[0] = (byte & 0b00010000) != 0
-      var mask : UInt8 = 0b00000001
-      for index in 1 ... 4 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(1...4)
     case .functionF5F8:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 5 ... 8 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(5...8)
     case .functionF9F12:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 9 ... 12 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(9...12)
     case .functionF13F20:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 13 ... 20 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(13...20)
     case .functionF21F28:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 21 ... 28 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(21...28)
     case .functionF29F36:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 29 ... 36 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(29...36)
     case .functionF37F44:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 37 ... 44 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(37...44)
     case .functionF45F52:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 45 ... 52 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(45...52)
     case .functionF53F60:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 53 ... 60 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(53...60)
     case .functionF61F68:
-      let byte = packet[packet.count - 2]
-      var mask : UInt8 = 0b00000001
-      for index in 61 ... 68 {
-        result[index] = (byte & mask) != 0
-        mask <<= 1
-      }
+      bits(61...68)
     case .speedAndDirectionPacket:
-      result[0] = (packet[packet.count - 2] & 0b00010000) != 0
+      result[0] = (byte & 0b00010000) != 0
     default:
       return nil
     }
@@ -881,44 +177,48 @@ public class SGDCCPacket : NSObject {
   
   public var cvNumber : UInt16? {
     
-    guard validDirectModeCVPackets.contains(packetType) else {
+    switch packetType {
+    case .directModeWriteBit, .directModeVerifyBit, .directModeWriteByte, .directModeVerifyByte:
+      return ((UInt16(packet[0] & 0b00000011) << 8) | UInt16(packet[1])) + 1
+    default:
       return nil
     }
     
-    return ((UInt16(packet[0] & 0b00000011) << 8) | UInt16(packet[1])) + 1
+  }
+  
+  public var cvValue : UInt8? {
+    
+    switch packetType {
+    case .directModeWriteByte, .directModeVerifyByte:
+      return packet[2]
+    default:
+      return nil
+    }
     
   }
   
   public var cvBitNumber : Int? {
     
-    guard validDirectModeCVPackets.contains(packetType) && (packet[0] & 0b00001100) == 0b00001000 else {
+    switch packetType {
+    case .directModeWriteBit, .directModeVerifyBit:
+      return Int(packet[2] & 0b000000111)
+    default:
       return nil
     }
-    
-    return Int(packet[2] & 0b000000111)
     
   }
 
   public var cvBitValue : Int? {
     
-    guard validDirectModeCVPackets.contains(packetType) && (packet[0] & 0b00001100) == 0b00001000 else {
+    switch packetType {
+    case .directModeWriteBit, .directModeVerifyBit:
+      return Int(packet[2] & 0b000001000) >> 3
+    default:
       return nil
     }
-    
-    return Int(packet[2] & 0b000001000) >> 3
     
   }
 
-  public var cvValue : UInt8? {
-    
-    guard packetType == .directModeWriteByte || packetType == .directModeVerifyByte else {
-      return nil
-    }
-    
-    return packet[2]
-    
-  }
-  
   public var packetType : SGDCCPacketType {
     
     if _packetType == nil {
@@ -970,7 +270,7 @@ public class SGDCCPacket : NSObject {
           case 0b01000000, 0b01100000:
             _packetType = .speedAndDirectionPacket
           case 0b10000000: // Function Group One Instruction
-            _packetType = .functionFLF1F4
+            _packetType = .functionF0F4
           case 0b10100000: // Function Group Two Instruction
             switch packet[index] & 0b00010000 {
             case 0b00000000:
@@ -1053,7 +353,7 @@ public class SGDCCPacket : NSObject {
       else {
         
         switch decoderMode {
-        case .serviceModeDirectAddressing:
+        case .serviceModeDirectMode:
           if packet.count == 4 && (packet[0] & serviceModeMask) == serviceModeMask {
             switch packet[0] & 0b00001100 {
             case 0b00000100:
@@ -1145,14 +445,15 @@ public class SGDCCPacket : NSObject {
   }
   
   // MARK: Private Class Properties
-  
+
+  /*
   private let validDirectModeCVPackets : Set<SGDCCPacketType> = [
     .directModeWriteBit,
     .directModeVerifyBit,
     .directModeWriteByte,
     .directModeVerifyByte,
   ]
-  
+  */
   // MARK: Public Class Properties
   
   public static let highestFunction = 68
@@ -1175,12 +476,561 @@ public class SGDCCPacket : NSObject {
     return UInt8((address + 49152) & 0xff)
   }
   
+  // MARK: Idle & Reset
+  
   public static func digitalDecoderResetPacket() -> SGDCCPacket {
-    return SGDCCPacket(data: [0x00, 0x00])!
+    return SGDCCPacket(data: [0x00, 0x00])
   }
 
   public static func digitalDecoderIdlePacket() -> SGDCCPacket {
-    return SGDCCPacket(data: [0xff, 0x00])!
+    return SGDCCPacket(data: [0xff, 0x00])
+  }
+
+  // MARK: Functions
+  
+  // Function Group One Instruction
+  
+  public static func f0f4Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 4 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 1 ... 4 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b10000000 | (functions[0] ? 0b00010000 : 0) | temp])
+    
+  }
+  
+  public static func f0f4Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 4 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 1 ... 4 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b10000000 | (functions[0] ? 0b00010000 : 0) | temp])
+    
+  }
+
+  // Function Group Two Instructions
+  
+  public static func f5f8Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 8 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 5 ... 8 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b10110000 | temp])
+    
+  }
+
+  public static func f5f8Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 8 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 5 ... 8 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b10110000 | temp])
+    
+  }
+
+  public static func f9f12Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 12 else {
+      return nil
+    }
+    
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 9 ... 12 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b10100000 | temp])
+    
+  }
+
+  public static func f9f12Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 12 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 9 ... 12 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b10100000 | temp])
+    
+  }
+  
+  // F13 to F20 Function Control
+  
+  public static func f13f20Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 20 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 13 ... 20 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b11011110, temp])
+    
+  }
+
+  public static func f13f20Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 20 else {
+      return nil
+    }
+    
+    var temp : UInt8 = 0
+    
+    var mask : UInt8 = 0b00000001
+    
+    for index in 13 ... 20 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b11011110, temp])
+    
+  }
+
+  // F21 to F28 Function Control
+  
+  public static func f21f28Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 28 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 21 ... 28 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b11011111, temp])
+    
+  }
+
+  public static func f21f28Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 28 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 21 ... 28 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b11011111, temp])
+    
+  }
+  
+  // F29 to F36 Function Control
+  
+  public static func f29f36Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 36 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 29 ... 36 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b11011000, temp])
+    
+  }
+
+  public static func f29f36Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 36 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 29 ... 36 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b11011000, temp])
+    
+  }
+  
+  // F37 to F44 Function Control
+  
+  public static func f37f44Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 44 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 37 ... 44 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b11011001, temp])
+    
+  }
+
+  public static func f37f44Control(longAddress address :UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 44 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 37 ... 44 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b11011001, temp])
+    
+  }
+  
+  // F45 to F52 Function Control
+  
+  public static func f45f52Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 52 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 45 ... 52 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b11011010, temp])
+    
+  }
+
+  public static func f45f52Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 52 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 45 ... 52 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b11011010, temp])
+    
+  }
+  
+  // F53 to F60 Function Control
+  
+  public static func f53f60Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 60 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 53 ... 60 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b11011011, temp])
+    
+  }
+
+  public static func f53f60Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 60 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 53 ... 60 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b11011011, temp])
+    
+  }
+  
+  // F61 to F68 Function Control
+  
+  public static func f61f68Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && functions.count > 68 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 61 ... 68 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [address, 0b11011100, temp])
+    
+  }
+
+  public static func f61f68Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && functions.count > 68 else {
+      return nil
+    }
+        
+    var mask : UInt8 = 0b00000001
+    
+    var temp : UInt8 = 0
+    for index in 61 ... 68 {
+      temp |= functions[index] ? mask : 0
+      mask <<= 1
+    }
+
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b11011100, temp])
+    
+  }
+
+  // MARK: Speed and Direction
+  
+  // Speed and Direction Packet - 14 Speed Steps + 2 stops, Short Address
+
+  public static func speedAndDirection(shortAddress address:UInt8, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:[Bool]) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && speed < 0b00010000 && functions.count > 0 else {
+      return nil
+    }
+    
+    let command : UInt8 = 0b01000000 | (functions[0] ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
+    
+    return SGDCCPacket(data: [address, command])
+    
+  }
+  
+  // Speed and Direction Packet - 14 Speed Steps + 2 stops, Long Address
+
+  public static func speedAndDirection(longAddress address:UInt16, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:[Bool]) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && speed < 0b00010000 && functions.count > 0 else {
+      return nil
+    }
+    
+    let command : UInt8 = 0b01000000 | (functions[0] ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
+    
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), command])
+    
+  }
+  
+  // Speed and Direction Packet - 28 Speed Steps + 4 stops, Short Address
+
+  public static func speedAndDirection(shortAddress address:UInt8, speed28Steps speed:UInt8, direction:SGDCCLocomotiveDirection) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && speed < 0b00100000 else {
+      return nil
+    }
+    
+    let command : UInt8 = 0b01000000 | ((speed & 0b00000001) != 0 ? 0b00010000 : 0) | (speed >> 1) | (direction == .forward ? 0b00100000 : 0)
+    
+    return SGDCCPacket(data: [address, command])
+    
+  }
+
+  // Speed and Direction Packet - 28 Speed Steps + 4 stops, Long Address
+
+  public static func speedAndDirection(longAddress address:UInt16, speed28steps speed:UInt8, direction:SGDCCLocomotiveDirection) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+
+    guard longAddressPartition ~= cv17 && speed < 0b00100000 else {
+      return nil
+    }
+    
+    let command : UInt8 = 0b01000000 | ((speed & 0b00000001) != 0 ? 0b00010000 : 0) | (speed >> 1) | (direction == .forward ? 0b00100000 : 0)
+    
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), command])
+    
+  }
+    
+  // Speed and Direction Packet - 126 Speed Steps + 2 stops, Short Address
+
+  public static func speedAndDirection(shortAddress address:UInt8, speed126Steps speed:UInt8, direction:SGDCCLocomotiveDirection) -> SGDCCPacket? {
+    
+    guard shortAddressPartition ~= address && speed < 128 else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [address, 0b00111111, speed | (direction == .forward ? 0b10000000 : 0)])
+    
+  }
+
+  // Speed and Direction Packet - 126 Speed Steps + 2 stops, Long Address
+
+  public static func speedAndDirection(longAddress address:UInt16, speed126Steps speed:UInt8, direction:SGDCCLocomotiveDirection) -> SGDCCPacket? {
+    
+    let cv17 = SGDCCPacket.cv17(address: address)
+    
+    guard longAddressPartition ~= cv17 && speed < 128 else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b00111111, speed | (direction == .forward ? 0b10000000 : 0)])
+    
+  }
+  
+  // MARK: Service Mode, Direct Mode
+  
+  // Write CV Byte
+  
+  public static func writeCVByteDirectMode(cvNumber:UInt16, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 1024) ~= cvNumber else {
+      return nil
+    }
+    
+    let temp = cvNumber - 1
+    
+    return SGDCCPacket(data: [0b01111100 | UInt8(temp >> 8), UInt8(temp & 0xff), value], decoderMode: .serviceModeDirectMode)
+
+  }
+
+  // Verify CV Byte
+  
+  public static func verifyCVByteDirectMode(cvNumber:UInt16, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 1024) ~= cvNumber else {
+      return nil
+    }
+    
+    let temp = cvNumber - 1
+    
+    return SGDCCPacket(data: [0b01110100 | UInt8(temp >> 8), UInt8(temp & 0xff), value], decoderMode: .serviceModeDirectMode)
+
+  }
+
+  // Write CV Bit
+  
+  public static func writeCVBitDirectMode(cvNumber:UInt16, bit:UInt8, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 1024) ~= cvNumber && (0 ... 7) ~= bit && (0 ... 1) ~= value else {
+      return nil
+    }
+    
+    let temp = cvNumber - 1
+    
+    return SGDCCPacket(data: [0b01111000 | UInt8(temp >> 8), UInt8(temp & 0xff), 0b11110000 | (value << 3) | bit], decoderMode: .serviceModeDirectMode)
+
+  }
+
+  // Verify CV Bit
+  
+  public static func verifyCVBitDirectMode(cvNumber:UInt16, bit:UInt8, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 1024) ~= cvNumber && (0 ... 7) ~= bit && (0 ... 1) ~= value else {
+      return nil
+    }
+    
+    let temp = cvNumber - 1
+    
+    return SGDCCPacket(data: [0b01111000 | UInt8(temp >> 8), UInt8(temp & 0xff), 0b11100000 | (value << 3) | bit], decoderMode: .serviceModeDirectMode)
+
   }
 
 }

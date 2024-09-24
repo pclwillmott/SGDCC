@@ -52,7 +52,7 @@ public enum SGDCCPacketType : CaseIterable, Sendable {
   case speedAndDirectionPacket
   case speedStepControl128
   case analogFunctionGroup
-  case functionFLF1F4
+  case functionF0F4
   case functionF5F8
   case functionF9F12
   case binaryStateControlLongForm
@@ -101,7 +101,7 @@ public enum SGDCCPacketType : CaseIterable, Sendable {
     .speedAndDirectionPacket        : String(localized: "Speed and Direction Packet"),
     .speedStepControl128            : String(localized: "Speed Step Control 128"),
     .analogFunctionGroup            : String(localized: "Analog Function Group"),
-    .functionFLF1F4                 : String(localized: "Functions FL, F1 to F4"),
+    .functionF0F4                   : String(localized: "Functions F0 to F4"),
     .functionF5F8                   : String(localized: "Functions F5 to F8"),
     .functionF9F12                  : String(localized: "Functions F9 to F12"),
     .binaryStateControlLongForm     : String(localized: "Binary State Control Long Form"),

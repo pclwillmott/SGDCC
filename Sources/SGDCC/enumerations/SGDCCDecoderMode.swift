@@ -37,7 +37,7 @@ public enum SGDCCDecoderMode : CaseIterable, Sendable {
   // MARK: Enumeration
   
   case operationsMode
-  case serviceModeDirectAddressing
+  case serviceModeDirectMode
   case serviceModeAddressOnly
   case serviceModePhysicalRegister
   case serviceModePagedAddressing
