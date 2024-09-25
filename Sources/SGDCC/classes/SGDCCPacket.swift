@@ -57,7 +57,7 @@ public class SGDCCPacket : NSObject {
   
   public init?(packet:[UInt8], decoderMode:SGDCCDecoderMode = .operationsMode) {
     
-    self.packet = packet
+    self.packet  = packet
     
     self.decoderMode = decoderMode
     
