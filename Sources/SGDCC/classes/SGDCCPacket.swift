@@ -28,12 +28,15 @@
 // Revision History:
 //
 //     22/09/2024  Paul Willmott - SGDCCPacket.swift created
-//     24/09/2024  Paul Willmott - Service Mode - Direct Mode packets added.
+//     24/09/2024  Paul Willmott - Service Mode - Direct Mode packets added
+//     25/09/2024  Paul Willmott - Service Mode - packets added for Address
+//                                 Only, Paged Mode, and Physical Register
 // -----------------------------------------------------------------------------
 
 import Foundation
 
 private let shortAddressPartition = UInt8(1)   ... UInt8(127)
+
 private let longAddressPartition  = UInt8(192) ... UInt8(231)
 
 public class SGDCCPacket : NSObject {
@@ -117,11 +120,24 @@ public class SGDCCPacket : NSObject {
       return nil
     }
   }
+  
   public var shortAddress : UInt8? {
-    guard !packet.isEmpty, shortAddressPartition ~= packet[0] else {
-      return nil
+    switch decoderMode {
+    case .operationsMode:
+      guard !packet.isEmpty, shortAddressPartition ~= packet[0] else {
+        return nil
+      }
+      return packet[0]
+    case .serviceModePhysicalRegister:
+      if (packet[0] & 0b00000111) == 0 {
+        return packet[1]
+      }
+    case .serviceModeAddressOnly:
+      return packet[1]
+    default:
+      break
     }
-    return packet[0]
+    return nil
   }
   
   public var longAddress : UInt16? {
@@ -175,11 +191,46 @@ public class SGDCCPacket : NSObject {
     return result
   }
   
+  // This property assumes that the decoder is a mobile digital decoder.
   public var cvNumber : UInt16? {
     
     switch packetType {
     case .directModeWriteBit, .directModeVerifyBit, .directModeWriteByte, .directModeVerifyByte:
       return ((UInt16(packet[0] & 0b00000011) << 8) | UInt16(packet[1])) + 1
+    case .addressOnlyVerifyAddress, .addressOnlyWriteAddress:
+      return 1
+    case .physicalRegisterWriteByte, .physicalRegisterVerifyByte:
+      switch physicalRegister {
+      case 1:
+        return 1
+      case 2:
+        return 2
+      case 3:
+        return 3
+      case 4:
+        return 4
+      case 5:
+        return 29
+      case 7:
+        return 7
+      case 8:
+        return 8
+      default:
+        break
+      }
+    default:
+      break
+    }
+    return nil
+  }
+  
+  public var physicalRegister : UInt8? {
+    
+    switch packetType {
+    case .addressOnlyWriteAddress, .addressOnlyVerifyAddress:
+      return 1
+    case .physicalRegisterWriteByte, .physicalRegisterVerifyByte:
+      return (packet[0] & 0x7) + 1
     default:
       return nil
     }
@@ -191,6 +242,8 @@ public class SGDCCPacket : NSObject {
     switch packetType {
     case .directModeWriteByte, .directModeVerifyByte:
       return packet[2]
+    case .physicalRegisterWriteByte, .physicalRegisterVerifyByte:
+      return packet[1]
     default:
       return nil
     }
@@ -376,25 +429,35 @@ public class SGDCCPacket : NSObject {
             }
           }
         case .serviceModeAddressOnly:
-          if packet.count == 3 && (packet[0] & serviceModeMask) == serviceModeMask && (packet[0] & 0b00000111) == 0 && (packet[1] & 0b10000000) == 0 {
-            switch packet[0] & 0b00001000 {
-            case 0b00001000:
-              _packetType = .addressOnlyWriteAddress
-            case 0b00000000:
-              _packetType = .addressOnlyVerifyAddress
-            default:
-              break
+          if packet.count == 3 {
+            if packet == [0b01111101, 0b00000001, 0b01111100] {
+              _packetType = .pagePresetInstruction
+            }
+            else if (packet[0] & serviceModeMask) == serviceModeMask && (packet[0] & 0b00000111) == 0 && (packet[1] & 0b10000000) == 0 {
+              switch packet[0] & 0b00001000 {
+              case 0b00001000:
+                _packetType = .addressOnlyWriteAddress
+              case 0b00000000:
+                _packetType = .addressOnlyVerifyAddress
+              default:
+                break
+              }
             }
           }
         case .serviceModePhysicalRegister:
-          if packet.count == 3 && (packet[0] & serviceModeMask) == serviceModeMask {
-            switch packet[0] & 0b00001000 {
-            case 0b00001000:
-              _packetType = .physicalRegisterWriteByte
-            case 0b00000000:
-              _packetType = .physicalRegisterVerifyByte
-            default:
-              break
+          if packet.count == 3 {
+            if packet == [0b01111101, 0b00000001, 0b01111100] {
+              _packetType = .pagePresetInstruction
+            }
+            else if (packet[0] & serviceModeMask) == serviceModeMask {
+              switch packet[0] & 0b00001000 {
+              case 0b00001000:
+                _packetType = .physicalRegisterWriteByte
+              case 0b00000000:
+                _packetType = .physicalRegisterVerifyByte
+              default:
+                break
+              }
             }
           }
         case .serviceModePagedAddressing:
@@ -412,24 +475,14 @@ public class SGDCCPacket : NSObject {
           break
         }
         
-        if _packetType == nil {
-          
-          if packet.count == 3 {
-            if packet[0] == 0b01111101 && packet[1] == 0b00000001 && packet[2] == 0b01111100 {
-              _packetType = .pagePresetInstruction
-            }
-            
-          }
-        }
-        
       }
       
       if _packetType == nil {
                 
-        if packet[0] == 0 && packet[1] == 0 && packet[2] == 0 {
+        if packet == [0, 0, 0] {
           _packetType = .digitalDecoderResetPacket
         }
-        else if packet[0] == 0xff && packet[1] == 0 && packet[2] == 0xff {
+        else if packet == [0xff, 0, 0xff] {
           _packetType = .digitalDecoderIdlePacket
         }
         else {
@@ -444,16 +497,6 @@ public class SGDCCPacket : NSObject {
     
   }
   
-  // MARK: Private Class Properties
-
-  /*
-  private let validDirectModeCVPackets : Set<SGDCCPacketType> = [
-    .directModeWriteBit,
-    .directModeVerifyBit,
-    .directModeWriteByte,
-    .directModeVerifyByte,
-  ]
-  */
   // MARK: Public Class Properties
   
   public static let highestFunction = 68
@@ -484,6 +527,10 @@ public class SGDCCPacket : NSObject {
 
   public static func digitalDecoderIdlePacket() -> SGDCCPacket {
     return SGDCCPacket(data: [0xff, 0x00])
+  }
+
+  public static func pagePresetInstruction(decoderMode:SGDCCDecoderMode = .serviceModePhysicalRegister) -> SGDCCPacket {
+    return SGDCCPacket(data: [0b01111101, 0b00000001], decoderMode: decoderMode)
   }
 
   // MARK: Functions
@@ -1030,6 +1077,117 @@ public class SGDCCPacket : NSObject {
     let temp = cvNumber - 1
     
     return SGDCCPacket(data: [0b01111000 | UInt8(temp >> 8), UInt8(temp & 0xff), 0b11100000 | (value << 3) | bit], decoderMode: .serviceModeDirectMode)
+
+  }
+  
+  // MARK: Service Mode, Address-Only Mode
+  
+  public static func verifyCVByteAddressOnlyMode(shortAddress address:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 127) ~= address else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [0b01110000, address], decoderMode: .serviceModeAddressOnly)
+
+  }
+
+  public static func writeCVByteAddressOnlyMode(shortAddress address:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 127) ~= address else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [0b01111000, address], decoderMode: .serviceModeAddressOnly)
+
+  }
+  
+  // MARK: Service Mode, Physical Register Addressing
+  
+  public static func verifyCVBytePhysicalRegister(physicalRegister:UInt8, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 8) ~= physicalRegister && (physicalRegister != 1 || (1 ... 127) ~= value) else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [0b01110000 | (physicalRegister - 1), value], decoderMode: .serviceModePhysicalRegister)
+
+  }
+
+  public static func writeCVBytePhysicalRegister(physicalRegister:UInt8, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 8) ~= physicalRegister && (physicalRegister != 1 || (1 ... 127) ~= value) else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [0b01111000 | (physicalRegister - 1), value], decoderMode: .serviceModePhysicalRegister)
+
+  }
+
+  // MARK: Service Mode, Paged Mode Addressing
+  // TODO: Add tests for these methods
+  
+  public static func verifyRegisterBytePagedMode(physicalRegister:UInt8, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 6) ~= physicalRegister else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [0b01110000 | (physicalRegister - 1), value], decoderMode: .serviceModePagedAddressing)
+
+  }
+
+  public static func writeRegisterBytePagedMode(physicalRegister:UInt8, value:UInt8) -> SGDCCPacket? {
+    
+    guard (1 ... 6) ~= physicalRegister else {
+      return nil
+    }
+    
+    return SGDCCPacket(data: [0b01111000 | (physicalRegister - 1), value], decoderMode: .serviceModePagedAddressing)
+
+  }
+  
+  public static func pagingRegisterValue(cvNumber:UInt16) -> UInt8? {
+    guard (1 ... 1024) ~= cvNumber else {
+      return nil
+    }
+    return UInt8((((cvNumber - 1) >> 2) + 1) & 0xff)
+  }
+
+  public static func dataRegister(cvNumber:UInt16) -> UInt8? {
+    guard (1 ... 1024) ~= cvNumber else {
+      return nil
+    }
+    return UInt8((cvNumber - 1) % 4) + 1
+  }
+  
+  public static func verifyCVBytePagedMode(cvNumber:UInt16, value:UInt8) -> SGDCCPacket? {
+    
+    guard let dataRegister = dataRegister(cvNumber: cvNumber) else {
+      return nil
+    }
+    
+    return verifyRegisterBytePagedMode(physicalRegister: dataRegister, value: value)
+
+  }
+
+  public static func writeCVBytePagedMode(cvNumber:UInt16, value:UInt8) -> SGDCCPacket? {
+    
+    guard let dataRegister = dataRegister(cvNumber: cvNumber) else {
+      return nil
+    }
+
+    return writeRegisterBytePagedMode(physicalRegister: dataRegister, value: value)
+
+  }
+  
+  public static func writePagingRegister(cvNumber:UInt16) -> SGDCCPacket? {
+    
+    guard let pagingRegisterValue = pagingRegisterValue(cvNumber: cvNumber) else {
+      return nil
+    }
+    
+    return writeRegisterBytePagedMode(physicalRegister: 6, value: pagingRegisterValue)
 
   }
 

@@ -182,7 +182,221 @@ import Testing
     }
     
   }
+  
+  packet = SGDCCPacket.writeCVByteAddressOnlyMode(shortAddress: 255)
+  
+  #expect(packet == nil)
 
+  packet = SGDCCPacket.writeCVByteAddressOnlyMode(shortAddress: 0)
+  
+  #expect(packet == nil)
+  
+  for shortAddress : UInt8 in 1 ... 127 {
+    
+    packet = SGDCCPacket.writeCVByteAddressOnlyMode(shortAddress: shortAddress)
+    
+    #expect(packet != nil)
+    
+    if let packet {
+      
+      #expect(packet.isChecksumOK)
+      
+      #expect(packet.decoderMode == .serviceModeAddressOnly)
+      
+      #expect(packet.packetType == .addressOnlyWriteAddress)
+
+      #expect(packet.shortAddress == shortAddress)
+
+    }
+
+  }
+
+  packet = SGDCCPacket.verifyCVByteAddressOnlyMode(shortAddress: 255)
+  
+  #expect(packet == nil)
+
+  packet = SGDCCPacket.verifyCVByteAddressOnlyMode(shortAddress: 0)
+  
+  #expect(packet == nil)
+  
+  for shortAddress : UInt8 in 1 ... 127 {
+    
+    packet = SGDCCPacket.verifyCVByteAddressOnlyMode(shortAddress: shortAddress)
+    
+    #expect(packet != nil)
+    
+    if let packet {
+      
+      #expect(packet.isChecksumOK)
+      
+      #expect(packet.decoderMode == .serviceModeAddressOnly)
+      
+      #expect(packet.packetType == .addressOnlyVerifyAddress)
+
+      #expect(packet.shortAddress == shortAddress)
+
+    }
+
+  }
+
+  packet = SGDCCPacket.verifyCVBytePhysicalRegister(physicalRegister: 20, value: 0)
+
+  #expect(packet == nil)
+
+  packet = SGDCCPacket.verifyCVBytePhysicalRegister(physicalRegister: 0, value: 0)
+
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.verifyCVBytePhysicalRegister(physicalRegister: 1, value: 0)
+
+  #expect(packet == nil)
+
+  packet = SGDCCPacket.verifyCVBytePhysicalRegister(physicalRegister: 1, value: 255)
+
+  #expect(packet == nil)
+
+  for value : UInt8 in 1 ... 127 {
+    
+    packet = SGDCCPacket.verifyCVBytePhysicalRegister(physicalRegister: 1, value: value)
+    
+    #expect(packet != nil)
+
+    #expect(packet?.cvValue != nil)
+
+    if let packet, let cvValue = packet.cvValue {
+      
+      #expect(packet.isChecksumOK)
+      
+      #expect(packet.decoderMode == .serviceModePhysicalRegister)
+      
+      #expect(packet.packetType == .physicalRegisterVerifyByte)
+      
+      #expect(cvValue == value)
+      
+      #expect(packet.physicalRegister == 1)
+      
+    }
+    
+  }
+
+  for register : UInt8 in [2, 3, 4, 5, 7, 8] {
+
+    for value : UInt8 in 0 ... 255 {
+      
+      packet = SGDCCPacket.verifyCVBytePhysicalRegister(physicalRegister: register, value: value)
+      
+      #expect(packet != nil)
+
+      #expect(packet?.cvValue != nil)
+
+      if let packet, let cvValue = packet.cvValue {
+        
+        #expect(packet.isChecksumOK)
+        
+        #expect(packet.decoderMode == .serviceModePhysicalRegister)
+        
+        #expect(packet.packetType == .physicalRegisterVerifyByte)
+        
+        #expect(cvValue == value)
+        
+        #expect(packet.physicalRegister == register)
+        
+      }
+      
+    }
+    
+  }
+
+  packet = SGDCCPacket.writeCVBytePhysicalRegister(physicalRegister: 20, value: 0)
+
+  #expect(packet == nil)
+
+  packet = SGDCCPacket.writeCVBytePhysicalRegister(physicalRegister: 0, value: 0)
+
+  #expect(packet == nil)
+  
+  packet = SGDCCPacket.writeCVBytePhysicalRegister(physicalRegister: 1, value: 0)
+
+  #expect(packet == nil)
+
+  packet = SGDCCPacket.writeCVBytePhysicalRegister(physicalRegister: 1, value: 255)
+
+  #expect(packet == nil)
+
+  for value : UInt8 in 1 ... 127 {
+    
+    packet = SGDCCPacket.writeCVBytePhysicalRegister(physicalRegister: 1, value: value)
+    
+    #expect(packet != nil)
+
+    #expect(packet?.cvValue != nil)
+
+    if let packet, let cvValue = packet.cvValue {
+      
+      #expect(packet.isChecksumOK)
+      
+      #expect(packet.decoderMode == .serviceModePhysicalRegister)
+      
+      #expect(packet.packetType == .physicalRegisterWriteByte)
+      
+      #expect(cvValue == value)
+      
+      #expect(packet.physicalRegister == 1)
+      
+    }
+    
+  }
+
+  for register : UInt8 in [2, 3, 4, 5, 7, 8] {
+    
+    for value : UInt8 in 0 ... 255 {
+      
+      packet = SGDCCPacket.writeCVBytePhysicalRegister(physicalRegister: register, value: value)
+      
+      #expect(packet != nil)
+
+      #expect(packet?.cvValue != nil)
+
+      if let packet, let cvValue = packet.cvValue {
+        
+        #expect(packet.isChecksumOK)
+        
+        #expect(packet.decoderMode == .serviceModePhysicalRegister)
+        
+        #expect(packet.packetType == .physicalRegisterWriteByte)
+        
+        #expect(cvValue == value)
+        
+        #expect(packet.physicalRegister == register)
+        
+      }
+      
+    }
+    
+  }
+  
+  // TODO: Add tests for Page Mode Addressing methods
+  
+  let dataRegister = SGDCCPacket.dataRegister(cvNumber: 65)
+  
+  #expect(dataRegister == 1)
+  
+  let pagingRegisterValue = SGDCCPacket.pagingRegisterValue(cvNumber: 65)
+  
+  #expect(pagingRegisterValue == 17)
+  
+  for cvNumber : UInt16 in 1 ... 1024 {
+    
+    let dataRegister = SGDCCPacket.dataRegister(cvNumber: cvNumber)
+    
+    #expect(dataRegister != nil)
+    
+    let pagingRegisterValue = SGDCCPacket.pagingRegisterValue(cvNumber: cvNumber)
+    
+    #expect(pagingRegisterValue != nil)
+
+  }
+  
 }
 
 @Test func testTitles() async throws {
@@ -1158,6 +1372,20 @@ import Testing
   #expect(packet.packetType == .digitalDecoderIdlePacket)
   
   #expect(packet.isChecksumOK)
+  
+  packet = SGDCCPacket.pagePresetInstruction(decoderMode: .serviceModeAddressOnly)
+  
+  print(packet.packet)
+  
+  #expect(packet.isChecksumOK)
+  
+  #expect(packet.packetType == .pagePresetInstruction)
+
+  packet = SGDCCPacket.pagePresetInstruction(decoderMode: .serviceModePhysicalRegister)
+  
+  #expect(packet.isChecksumOK)
+  
+  #expect(packet.packetType == .pagePresetInstruction)
 
 }
 
