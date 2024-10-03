@@ -34,6 +34,11 @@ import Foundation
 
 public struct SGFunctionGroup {
   
+  // MARK: Constructors
+  
+  public init() {
+  }
+  
   // MARK: Private Properties
   
   private var values : [UInt64] = [0, 0]
