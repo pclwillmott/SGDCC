@@ -147,23 +147,23 @@ public class SGDCCPacket : NSObject {
     return (UInt16(packet[0]) << 8 | UInt16(packet[1])) - 49152
   }
 
-  public var functions : [Bool]? {
+  public var functions : SGFunctionGroup? {
     
-    var result = [Bool](repeating: false, count: SGDCCPacket.highestFunction + 1)
+    var result = SGFunctionGroup()
 
     let byte = packet[packet.count - 2]
 
     func bits(_ range: ClosedRange<Int>) {
       var mask : UInt8 = 0b00000001
       for index in range {
-        result[index] = (byte & mask) != 0
+        result.set(index: index, value: (byte & mask) != 0)
         mask <<= 1
       }
     }
 
     switch packetType {
     case .functionF0F4:
-      result[0] = (byte & 0b00010000) != 0
+      result.set(index: 0, value: (byte & 0b00010000) != 0)
       bits(1...4)
     case .functionF5F8:
       bits(5...8)
@@ -184,7 +184,7 @@ public class SGDCCPacket : NSObject {
     case .functionF61F68:
       bits(61...68)
     case .speedAndDirectionPacket:
-      result[0] = (byte & 0b00010000) != 0
+      result.set(index: 0, value: (byte & 0b00010000) != 0)
     default:
       return nil
     }
@@ -537,9 +537,9 @@ public class SGDCCPacket : NSObject {
   
   // Function Group One Instruction
   
-  public static func f0f4Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f0f4Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 4 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -547,19 +547,19 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 1 ... 4 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
-    return SGDCCPacket(data: [address, 0b10000000 | (functions[0] ? 0b00010000 : 0) | temp])
+    return SGDCCPacket(data: [address, 0b10000000 | (functions.get(index: 0) ? 0b00010000 : 0) | temp])
     
   }
   
-  public static func f0f4Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f0f4Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 4 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -567,19 +567,19 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 1 ... 4 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
-    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b10000000 | (functions[0] ? 0b00010000 : 0) | temp])
+    return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), 0b10000000 | (functions.get(index: 0) ? 0b00010000 : 0) | temp])
     
   }
 
   // Function Group Two Instructions
   
-  public static func f5f8Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f5f8Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 8 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -587,7 +587,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 5 ... 8 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -595,11 +595,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f5f8Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f5f8Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 8 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -607,7 +607,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 5 ... 8 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -615,9 +615,9 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f9f12Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f9f12Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 12 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
     
@@ -625,7 +625,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 9 ... 12 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -633,11 +633,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f9f12Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f9f12Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 12 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -645,7 +645,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 9 ... 12 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -655,9 +655,9 @@ public class SGDCCPacket : NSObject {
   
   // F13 to F20 Function Control
   
-  public static func f13f20Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f13f20Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 20 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -665,7 +665,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 13 ... 20 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -673,11 +673,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f13f20Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f13f20Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 20 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
     
@@ -686,7 +686,7 @@ public class SGDCCPacket : NSObject {
     var mask : UInt8 = 0b00000001
     
     for index in 13 ... 20 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -696,9 +696,9 @@ public class SGDCCPacket : NSObject {
 
   // F21 to F28 Function Control
   
-  public static func f21f28Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f21f28Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 28 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -706,7 +706,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 21 ... 28 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -714,11 +714,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f21f28Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f21f28Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 28 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -726,7 +726,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 21 ... 28 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -736,9 +736,9 @@ public class SGDCCPacket : NSObject {
   
   // F29 to F36 Function Control
   
-  public static func f29f36Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f29f36Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 36 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -746,7 +746,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 29 ... 36 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -754,11 +754,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f29f36Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f29f36Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 36 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -766,7 +766,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 29 ... 36 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -776,9 +776,9 @@ public class SGDCCPacket : NSObject {
   
   // F37 to F44 Function Control
   
-  public static func f37f44Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f37f44Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 44 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -786,7 +786,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 37 ... 44 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -794,11 +794,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f37f44Control(longAddress address :UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f37f44Control(longAddress address :UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 44 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -806,7 +806,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 37 ... 44 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -816,9 +816,9 @@ public class SGDCCPacket : NSObject {
   
   // F45 to F52 Function Control
   
-  public static func f45f52Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f45f52Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 52 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -826,7 +826,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 45 ... 52 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -834,11 +834,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f45f52Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f45f52Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 52 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -846,7 +846,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 45 ... 52 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -856,9 +856,9 @@ public class SGDCCPacket : NSObject {
   
   // F53 to F60 Function Control
   
-  public static func f53f60Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f53f60Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 60 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -866,7 +866,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 53 ... 60 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -874,11 +874,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f53f60Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f53f60Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 60 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -886,7 +886,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 53 ... 60 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -896,9 +896,9 @@ public class SGDCCPacket : NSObject {
   
   // F61 to F68 Function Control
   
-  public static func f61f68Control(shortAddress address:UInt8, functions:[Bool]) -> SGDCCPacket? {
+  public static func f61f68Control(shortAddress address:UInt8, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && functions.count > 68 else {
+    guard shortAddressPartition ~= address else {
       return nil
     }
         
@@ -906,7 +906,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 61 ... 68 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -914,11 +914,11 @@ public class SGDCCPacket : NSObject {
     
   }
 
-  public static func f61f68Control(longAddress address:UInt16, functions:[Bool]) -> SGDCCPacket? {
+  public static func f61f68Control(longAddress address:UInt16, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && functions.count > 68 else {
+    guard longAddressPartition ~= cv17 else {
       return nil
     }
         
@@ -926,7 +926,7 @@ public class SGDCCPacket : NSObject {
     
     var temp : UInt8 = 0
     for index in 61 ... 68 {
-      temp |= functions[index] ? mask : 0
+      temp |= functions.get(index: index) ? mask : 0
       mask <<= 1
     }
 
@@ -938,13 +938,13 @@ public class SGDCCPacket : NSObject {
   
   // Speed and Direction Packet - 14 Speed Steps + 2 stops, Short Address
 
-  public static func speedAndDirection(shortAddress address:UInt8, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:[Bool]) -> SGDCCPacket? {
+  public static func speedAndDirection(shortAddress address:UInt8, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:SGFunctionGroup) -> SGDCCPacket? {
     
-    guard shortAddressPartition ~= address && speed < 0b00010000 && functions.count > 0 else {
+    guard shortAddressPartition ~= address && speed < 0b00010000 else {
       return nil
     }
     
-    let command : UInt8 = 0b01000000 | (functions[0] ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
+    let command : UInt8 = 0b01000000 | (functions.get(index: 0) ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
     
     return SGDCCPacket(data: [address, command])
     
@@ -952,15 +952,15 @@ public class SGDCCPacket : NSObject {
   
   // Speed and Direction Packet - 14 Speed Steps + 2 stops, Long Address
 
-  public static func speedAndDirection(longAddress address:UInt16, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:[Bool]) -> SGDCCPacket? {
+  public static func speedAndDirection(longAddress address:UInt16, speed14Steps speed:UInt8, direction:SGDCCLocomotiveDirection, functions:SGFunctionGroup) -> SGDCCPacket? {
     
     let cv17 = SGDCCPacket.cv17(address: address)
     
-    guard longAddressPartition ~= cv17 && speed < 0b00010000 && functions.count > 0 else {
+    guard longAddressPartition ~= cv17 && speed < 0b00010000 else {
       return nil
     }
     
-    let command : UInt8 = 0b01000000 | (functions[0] ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
+    let command : UInt8 = 0b01000000 | (functions.get(index: 0) ? 0b00010000 : 0) | (speed) | (direction == .forward ? 0b00100000 : 0)
     
     return SGDCCPacket(data: [cv17, SGDCCPacket.cv18(address: address), command])
     
